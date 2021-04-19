@@ -57,7 +57,6 @@ async def get_emojis(ctx):
     await ctx.trigger_typing()
 
     emojis = await ctx.guild.fetch_emojis()
-    data = []
     if sys.platform == 'linux':
         rm = 'rm -rf'
     elif sys.platform == 'win32':
@@ -65,16 +64,12 @@ async def get_emojis(ctx):
     else:
         return 1
 
-    for i in emojis:
-        data.append((i.name, i.url))
-    
     os.system('mkdir tmp')
-    for i in range(len(data)):
-        await data[i][1].save(f'tmp/{data[i][0]}.gif')
-    
+
     with zipfile.ZipFile('tmp/emojis.zip', 'w') as z:
-        for i in range(len(data)):
-            z.write(f'tmp/{data[i][0]}.gif')
+        for i in emojis:
+            await i.url.save(f'tmp/{i.name}.gif')
+            z.write(f'tmp/{i.name}.gif', f'{i.name}.gif')
     
     await ctx.send(file = discord.File(f'tmp/emojis.zip'))
     os.system(f'{rm} tmp')
