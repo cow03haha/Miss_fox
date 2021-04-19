@@ -3,6 +3,7 @@ from discord.ext import commands
 import random
 import zipfile
 import os
+import sys
 import asyncio
 import datetime
 import json
@@ -57,6 +58,12 @@ async def get_emojis(ctx):
 
     emojis = await ctx.guild.fetch_emojis()
     data = []
+    if sys.platform == 'linux':
+        rm = 'rm -rf'
+    elif sys.platform == 'win32':
+        rm = 'rmdir /S /Q'
+    else:
+        return 1
 
     for i in emojis:
         data.append((i.name, i.url))
@@ -70,7 +77,7 @@ async def get_emojis(ctx):
             z.write(f'tmp/{data[i][0]}.gif')
     
     await ctx.send(file = discord.File(f'tmp/emojis.zip'))
-    os.system(f'rm -r tmp')
+    os.system(f'{rm} tmp')
 
 @commands.is_owner()
 @bot.command()
