@@ -38,22 +38,27 @@ async def on_ready():
 
     print(f'bot {bot.user} online!')
 
+@bot.listen()
+async def on_command_error(ctx, error):
+    if type(error) == discord.ext.commands.MessageNotFound:
+        await ctx.send('找不到該訊息!')
+
 @bot.command()
 @commands.is_owner()
 async def send_to(ctx, ch: int, *, text):
-    """send message to specific channel"""
+    """Send message to specific channel"""
     ch = bot.get_channel(ch)
     
     await ch.send(text)
 
 @bot.command()
 async def slap(ctx, *, reason: Slaper):
-    """you can try it"""
+    """Slap random people in guild.t"""
     await ctx.send(reason)
 
 @bot.command()
 async def get_emojis(ctx):
-    """獲取伺服器表情"""
+    """Get guild emojis."""
     await ctx.trigger_typing()
 
     emojis = await ctx.guild.fetch_emojis()
@@ -74,10 +79,21 @@ async def get_emojis(ctx):
     await ctx.send(file = discord.File(f'tmp/emojis.zip'))
     os.system(f'{rm} tmp')
 
+@commands.has_guild_permissions(manage_messages = True)
+@bot.command()
+async def clear_afterid(ctx, msg: discord.Message):
+    """Clear message after message you specific."""
+    await ctx.trigger_typing()
+
+    time = msg.created_at
+    
+    await msg.channel.purge(after = time, bulk = True)
+    await ctx.send(f'**{msg.channel}** {msg.id} 後的訊息刪除成功!', delete_after = 7)
+
 @commands.is_owner()
 @bot.command()
 async def poweroff(ctx):
-    """關閉bot。"""
+    """Shutdown bot."""
     await ctx.send('bot關閉成功')
     await bot.logout()
     await bot.close()
