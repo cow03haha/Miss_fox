@@ -7,12 +7,13 @@ import sys
 import asyncio
 import datetime
 import json
-global bg_task
+global spam
+spam = {}
 
 with open('settings.json', 'r') as jfile:
     jdata = json.load(jfile)
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='/', intents=intents)
+bot = commands.Bot(command_prefix=jdata['prefix'], intents=intents)
 
 
 class Slaper(commands.Converter):
@@ -20,7 +21,7 @@ class Slaper(commands.Converter):
         to_slap = random.choice(ctx.guild.members)
         return '{0.author.mention} slapped {1.mention} because *{2}*'.format(ctx, to_slap, arg)
 
-async def interval():
+async def time():
     await asyncio.sleep(60 - int(datetime.datetime.now().strftime('%S')))
     
     while not bot.is_closed():
@@ -30,13 +31,52 @@ async def interval():
         await bot.change_presence(activity = time)
         await asyncio.sleep(60)
 
+async def antiSpam():
+    while not bot.is_closed():
+        for i in spam:
+            if not spam[i]["time"]:
+                spam[i]["time"] = 60
+                spam[i]["count"] = 0
+                spam[i]["mute"] = False
+                
+                role = spam[i]["member"].guild.get_role(808738303457230869)
+
+                await spam[i]["member"].remove_roles(role, reason = "自動防洗頻系統")
+            else:
+                spam[i]["time"] -= 1
+
+        await asyncio.sleep(1)
+
 
 @bot.event
 async def on_ready():
-    global bg_task
-    bg_task = bot.loop.create_task(interval())
+    bot.loop.create_task(time())
+    bot.loop.create_task(antiSpam())
 
     print(f'bot {bot.user} online!')
+
+@bot.event
+async def on_message(msg):
+    global spam
+
+    try:
+        if spam[msg.author.id]:
+            spam[msg.author.id]["count"] += 1
+
+            if spam[msg.author.id]["count"] == 20:
+                spam[msg.author.id]["time"] = 1800
+                spam[msg.author.id]["mute"] = True
+                role = msg.guild.get_role(808738303457230869)
+
+                await msg.author.add_roles(role, reason = "自動防洗頻系統")
+                
+    except KeyError:
+        spam[msg.author.id] = {
+            "time": 60,
+            "count": 1,
+            "mute": False,
+            "member": msg.author,
+        }
 
 @bot.listen()
 async def on_command_error(ctx, error):
