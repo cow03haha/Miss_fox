@@ -39,9 +39,9 @@ async def antiSpam():
                 spam[i]["count"] = 0
                 spam[i]["mute"] = False
                 
-                role = spam[i]["member"].guild.get_role(808738303457230869)
-
-                await spam[i]["member"].remove_roles(role, reason = "自動防洗頻系統")
+                if spam[i]['mute']:
+                    role = spam[i]["member"].guild.get_role(808738303457230869)
+                    await spam[i]["member"].remove_roles(role, reason = "自動防洗頻系統")
             else:
                 spam[i]["time"] -= 1
 
@@ -59,6 +59,9 @@ async def on_ready():
 async def on_message(msg):
     global spam
 
+    if msg.content == f'<@!{bot.user.id}> prefix':
+        await msg.channel.send(f'my prifx is `{bot.command_prefix}` !')
+
     try:
         if spam[msg.author.id]:
             spam[msg.author.id]["count"] += 1
@@ -66,9 +69,11 @@ async def on_message(msg):
             if spam[msg.author.id]["count"] == 20:
                 spam[msg.author.id]["time"] = 1800
                 spam[msg.author.id]["mute"] = True
+                
                 role = msg.guild.get_role(808738303457230869)
-
                 await msg.author.add_roles(role, reason = "自動防洗頻系統")
+
+                await msg.channel.purge(after = time, bulk = True)
                 
     except KeyError:
         spam[msg.author.id] = {
@@ -76,7 +81,10 @@ async def on_message(msg):
             "count": 1,
             "mute": False,
             "member": msg.author,
+            "msgTime": msg.created_at - datetime.timedelta(microseconds = 1),
         }
+
+    await bot.process_commands(msg)
 
 @bot.listen()
 async def on_command_error(ctx, error):
@@ -93,7 +101,7 @@ async def send_to(ctx, ch: int, *, text):
 
 @bot.command()
 async def slap(ctx, *, reason: Slaper):
-    """Slap random people in guild.t"""
+    """Slap random people in guild."""
     await ctx.send(reason)
 
 @bot.command()
@@ -125,10 +133,26 @@ async def clear_afterid(ctx, msg: discord.Message):
     """Clear message after message you specific."""
     await ctx.trigger_typing()
 
-    time = msg.created_at
+    time = msg.created_at - datetime.timedelta(microseconds = 1)
     
     await msg.channel.purge(after = time, bulk = True)
-    await ctx.send(f'**{msg.channel}** {msg.id} 後的訊息刪除成功!', delete_after = 7)
+    await ctx.send(f'**{msg.channel}** {msg.id} 後(含)的訊息刪除成功!', delete_after = 7)
+
+@commands.has_guild_permissions(manage_messages = True)
+@bot.command()
+async def unmute(ctx, member: discord.Member):
+    if not spam[member.id]['mute']:
+        await ctx.send('這位成員沒有被靜音!')
+        return 0
+        
+    spam[member.id]['time'] = 60
+    spam[member.id]['count'] = 0
+    spam[member.id]['mute'] = False
+    
+    role = member.guild.get_role(808738303457230869)
+    await member.remove_roles(role, reason = "自動防洗頻系統(手動)")
+
+    await ctx.send(f'以解除靜音 <@!{member.id}> !')
 
 @commands.is_owner()
 @bot.command()
