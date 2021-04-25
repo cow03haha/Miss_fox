@@ -34,16 +34,16 @@ async def time():
 async def antiSpam():
     while not bot.is_closed():
         for i in spam:
-            if not spam[i]["time"]:
-                spam[i]["time"] = 60
-                spam[i]["count"] = 0
-                spam[i]["mute"] = False
+            if not spam[i]['time']:
+                spam[i]['time'] = 60
+                spam[i]['count'] = 0
+                spam[i]['mute'] = False
                 
                 if spam[i]['mute']:
-                    role = spam[i]["member"].guild.get_role(808738303457230869)
-                    await spam[i]["member"].remove_roles(role, reason = "自動防洗頻系統")
+                    role = spam[i]['member'].guild.get_role(808738303457230869)
+                    await spam[i]['member'].remove_roles(role, reason = '自動防洗頻系統')
             else:
-                spam[i]["time"] -= 1
+                spam[i]['time'] -= 1
 
         await asyncio.sleep(1)
 
@@ -64,26 +64,26 @@ async def on_message(msg):
 
     try:
         if spam[msg.author.id]:
-            spam[msg.author.id]["count"] += 1
+            spam[msg.author.id]['count'] += 1
 
-            if spam[msg.author.id]["count"] == 20:
-                spam[msg.author.id]["time"] = 1800
-                spam[msg.author.id]["mute"] = True
+            if spam[msg.author.id]['count'] == 20:
+                spam[msg.author.id]['time'] = 1800
+                spam[msg.author.id]['mute'] = True
                 
                 role = msg.guild.get_role(808738303457230869)
-                await msg.author.add_roles(role, reason = "自動防洗頻系統")
+                await msg.author.add_roles(role, reason = '自動防洗頻系統')
 
-                await msg.channel.purge(after = time, bulk = True)
+                await msg.channel.purge(after = spam[msg.author.id]['msgTime'], bulk = True)
 
                 await msg.channel.send(f'{msg.author.mention} 已被自動防洗頻系統靜音，如有誤判請通知管理員')
                 
     except KeyError:
         spam[msg.author.id] = {
-            "time": 60,
-            "count": 1,
-            "mute": False,
-            "member": msg.author,
-            "msgTime": msg.created_at - datetime.timedelta(microseconds = 1),
+            'time': 60,
+            'count': 1,
+            'mute': False,
+            'member': msg.author,
+            'msgTime': msg.created_at - datetime.timedelta(microseconds = 1),
         }
 
     await bot.process_commands(msg)
@@ -152,7 +152,7 @@ async def unmute(ctx, member: discord.Member):
     spam[member.id]['mute'] = False
     
     role = member.guild.get_role(808738303457230869)
-    await member.remove_roles(role, reason = "自動防洗頻系統(手動)")
+    await member.remove_roles(role, reason = '自動防洗頻系統(手動)')
 
     await ctx.send(f'以解除靜音 <@!{member.id}> !')
 
