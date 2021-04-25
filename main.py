@@ -74,6 +74,8 @@ async def on_message(msg):
                 await msg.author.add_roles(role, reason = "自動防洗頻系統")
 
                 await msg.channel.purge(after = time, bulk = True)
+
+                await msg.channel.send(f'{msg.author.mention} 已被自動防洗頻系統靜音，如有誤判請通知管理員')
                 
     except KeyError:
         spam[msg.author.id] = {
