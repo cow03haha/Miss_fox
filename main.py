@@ -132,7 +132,7 @@ async def get_emojis(ctx):
 @commands.has_guild_permissions(manage_messages = True)
 @bot.command()
 async def clear_afterid(ctx, msg: discord.Message):
-    """Clear message after message you specific."""
+    """Clear message after message you specific(limit: 100)."""
     await ctx.trigger_typing()
 
     time = msg.created_at - datetime.timedelta(microseconds = 1)
