@@ -143,6 +143,7 @@ async def clear_afterid(ctx, msg: discord.Message):
 @commands.has_guild_permissions(manage_messages = True)
 @bot.command()
 async def unmute(ctx, member: discord.Member):
+    """Unmute someone that got mute."""
     if not spam[member.id]['mute']:
         await ctx.send('這位成員沒有被靜音!')
         return 0
@@ -154,7 +155,7 @@ async def unmute(ctx, member: discord.Member):
     role = member.guild.get_role(808738303457230869)
     await member.remove_roles(role, reason = '自動防洗頻系統(手動)')
 
-    await ctx.send(f'以解除靜音 <@!{member.id}> !')
+    await ctx.send(f'以解除靜音 {member.mention} !')
 
 @commands.is_owner()
 @bot.command()
