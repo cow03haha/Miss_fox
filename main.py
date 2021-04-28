@@ -33,17 +33,20 @@ async def time():
 
 async def antiSpam():
     while not bot.is_closed():
+        remove = []
+
         for i in spam:
+            spam[i]['time'] -= 1
+
             if not spam[i]['time']:
-                spam[i]['time'] = 60
-                spam[i]['count'] = 0
-                spam[i]['mute'] = False
-                
+                remove.append(i)
+
                 if spam[i]['mute']:
-                    role = spam[i]['member'].guild.get_role(808738303457230869)
+                    role = discord.utils.get(spam[i]['member'].guild.roles, name = 'muted')
                     await spam[i]['member'].remove_roles(role, reason = '自動防洗頻系統')
-            else:
-                spam[i]['time'] -= 1
+
+        for i in remove:
+            del spam[i]
 
         await asyncio.sleep(1)
 
@@ -59,7 +62,7 @@ async def on_ready():
 async def on_message(msg):
     global spam
 
-    if msg.content == f'<@!{bot.user.id}> prefix':
+    if msg.content == f'{bot.user.mention} prefix':
         await msg.channel.send(f'my prifx is `{bot.command_prefix}` !')
 
     try:
@@ -70,7 +73,7 @@ async def on_message(msg):
                 spam[msg.author.id]['time'] = 1800
                 spam[msg.author.id]['mute'] = True
                 
-                role = msg.guild.get_role(808738303457230869)
+                role = discord.utils.get(msg.guild.roles, name = 'muted')
                 await msg.author.add_roles(role, reason = '自動防洗頻系統')
 
                 await msg.channel.purge(after = spam[msg.author.id]['msgTime'], bulk = True)
@@ -148,7 +151,7 @@ async def unmute(ctx, member: discord.Member):
         await ctx.send('這位成員沒有被靜音!')
         return 0
         
-    spam[member.id]['time'] = 60
+    spam[member.id]['time'] = 1
     spam[member.id]['count'] = 0
     spam[member.id]['mute'] = False
     
