@@ -7,14 +7,12 @@ import sys
 import asyncio
 import datetime
 import json
-global spam
 spam = {}
 
 with open('settings.json', 'r') as jfile:
     jdata = json.load(jfile)
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=jdata['prefix'], intents=intents)
-
 
 class Slaper(commands.Converter):
     async def convert(self, ctx, arg):
@@ -34,20 +32,18 @@ async def time():
 async def antiSpam():
     while not bot.is_closed():
         remove = []
-
         for i in spam:
             spam[i]['time'] -= 1
-
-            if not spam[i]['time']:
+            if  spam[i]['time'] <= 0:
                 remove.append(i)
-
+                
                 if spam[i]['mute']:
-                    role = discord.utils.get(spam[i]['member'].guild.roles, name = 'muted')
+                    role = discord.utils.get(spam[i]['member'].guild.roles, name = 'Muted')
                     await spam[i]['member'].remove_roles(role, reason = '自動防洗頻系統')
 
         for i in remove:
             del spam[i]
-
+            
         await asyncio.sleep(1)
 
 
@@ -55,13 +51,13 @@ async def antiSpam():
 async def on_ready():
     bot.loop.create_task(time())
     bot.loop.create_task(antiSpam())
-
+    
     print(f'bot {bot.user} online!')
-
+    ch = bot.get_channel(741685158335479950)
+    await ch.send(f'bot {bot.user} online!')
+    
 @bot.event
 async def on_message(msg):
-    global spam
-
     if msg.content == f'{bot.user.mention} prefix':
         await msg.channel.send(f'my prifx is `{bot.command_prefix}` !')
 
@@ -69,11 +65,12 @@ async def on_message(msg):
         if spam[msg.author.id]:
             spam[msg.author.id]['count'] += 1
 
-            if spam[msg.author.id]['count'] == 20:
+            if spam[msg.author.id]['count'] >= 20:
                 spam[msg.author.id]['time'] = 1800
+                spam[msg.author.id]['count'] = 0
                 spam[msg.author.id]['mute'] = True
                 
-                role = discord.utils.get(msg.guild.roles, name = 'muted')
+                role = discord.utils.get(msg.guild.roles, name = 'Muted')
                 await msg.author.add_roles(role, reason = '自動防洗頻系統')
 
                 await msg.channel.purge(after = spam[msg.author.id]['msgTime'], bulk = True)
@@ -95,6 +92,8 @@ async def on_message(msg):
 async def on_command_error(ctx, error):
     if type(error) == discord.ext.commands.MessageNotFound:
         await ctx.send('找不到該訊息!')
+    else:
+        await ctx.send(f'未知錯誤\n```\n{error}\n```')
 
 @bot.command()
 @commands.is_owner()
@@ -145,17 +144,36 @@ async def clear_afterid(ctx, msg: discord.Message):
 
 @commands.has_guild_permissions(manage_messages = True)
 @bot.command()
+async def mute(ctx, member: discord.Member):
+    spam[member.id] = {
+            'time': 31536000,
+            'count': 0,
+            'mute': True,
+            'member': member,
+            'msgTime': datetime.datetime.now() - datetime.timedelta(microseconds = 1),
+        }
+    
+    role = discord.utils.get(ctx.guild.roles, name = 'Muted')
+    await member.add_roles(role, reason = '自動防洗頻系統(手動)')
+
+    await ctx.send(f'以手動靜音 {member.mention} !')
+
+@commands.has_guild_permissions(manage_messages = True)
+@bot.command()
 async def unmute(ctx, member: discord.Member):
-    """Unmute someone that got mute."""
-    if not spam[member.id]['mute']:
+    try:
+        if not spam[member.id]['mute']:
+            await ctx.send('這位成員沒有被靜音!')
+            return 0
+    except KeyError:
         await ctx.send('這位成員沒有被靜音!')
         return 0
         
-    spam[member.id]['time'] = 1
+    spam[member.id]['time'] = 60
     spam[member.id]['count'] = 0
     spam[member.id]['mute'] = False
     
-    role = member.guild.get_role(808738303457230869)
+    role = discord.utils.get(ctx.guild.roles, name = 'Muted')
     await member.remove_roles(role, reason = '自動防洗頻系統(手動)')
 
     await ctx.send(f'以解除靜音 {member.mention} !')
@@ -165,9 +183,14 @@ async def unmute(ctx, member: discord.Member):
 async def poweroff(ctx):
     """Shutdown bot."""
     await ctx.send('bot關閉成功')
-    await bot.logout()
     await bot.close()
 
+@commands.is_owner()
+@bot.command()
+async def reboot(ctx):
+    """reset bot."""
+    await ctx.send('WIP...')
 
 if __name__ == '__main__':
     bot.run(jdata['token'])
+            
