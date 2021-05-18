@@ -57,7 +57,10 @@ async def on_ready():
     await ch.send(f'bot {bot.user} online!')
     
 @bot.event
-async def on_message(msg):
+async def on_message(msg: discord.Message):
+    if msg.author.bot:
+        return
+
     if msg.content == f'{bot.user.mention} prefix':
         await msg.channel.send(f'my prifx is `{bot.command_prefix}` !')
 
