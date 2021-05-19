@@ -145,6 +145,23 @@ async def clear_afterid(ctx, msg: discord.Message):
     await msg.channel.purge(after = time, bulk = True)
     await ctx.send(f'**{msg.channel}** {msg.id} 後(含)的訊息刪除成功!', delete_after = 7)
 
+@bot.command()
+@commands.is_owner()
+async def nickall(ctx, nick = None):
+    msg = await ctx.send('progress...')
+
+    if nick == 'clear':
+        nick = None
+
+    members = ctx.guild.members
+    for i in members:
+        try:
+            await i.edit(nick = nick)
+        except:
+            continue
+    
+    await msg.edit('success')
+
 @commands.has_guild_permissions(manage_messages = True)
 @bot.command()
 async def mute(ctx, member: discord.Member):
