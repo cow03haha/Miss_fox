@@ -55,7 +55,7 @@ async def on_ready():
     print(f'bot {bot.user} online!')
     ch = bot.get_channel(741685158335479950)
     await ch.send(f'bot {bot.user} online!')
-    
+
 @bot.event
 async def on_message(msg: discord.Message):
     if msg.author.bot:
@@ -145,15 +145,26 @@ async def clear_afterid(ctx, msg: discord.Message):
     await msg.channel.purge(after = time, bulk = True)
     await ctx.send(f'**{msg.channel}** {msg.id} 後(含)的訊息刪除成功!', delete_after = 7)
 
+@commands.is_owner()
+@bot.command()
+async def get_nick(ctx, member: discord.Member):
+    """get specific member's nick"""
+    await ctx.send(member.nick)
+
 @bot.command()
 @commands.is_owner()
-async def nickall(ctx, nick = None):
+async def nick(ctx, location = None, nick = None):
     msg = await ctx.send('progress...')
+
+    if location == 'all':
+        location = ctx.guild
+    else:
+        location = ctx.guild.get_channel(int(location))
 
     if nick == 'clear':
         nick = None
 
-    members = ctx.guild.members
+    members = location.members
     for i in members:
         try:
             await i.edit(nick = nick)
@@ -208,7 +219,7 @@ async def poweroff(ctx):
 @commands.is_owner()
 @bot.command()
 async def reboot(ctx):
-    """reset bot."""
+    """restart bot."""
     await ctx.send('WIP...')
 
 if __name__ == '__main__':
