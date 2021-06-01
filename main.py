@@ -107,9 +107,9 @@ async def ping(ctx):
     t2 = time.perf_counter()
     await ctx.trigger_typing()
 
-    bot = round((t2 - t) * 1000)
+    this = round((t2 - t) * 1000)
     ws = int(bot.latency * 1000)
-    await ctx.send(f'延遲：{bot} 毫秒(ms)\nWebsocket：{ws} 毫秒(ms)')
+    await ctx.send(f'延遲：{this} 毫秒(ms)\nWebsocket：{ws} 毫秒(ms)')
 
 @bot.command()
 @commands.is_owner()
