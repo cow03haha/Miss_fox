@@ -50,7 +50,7 @@ async def antiSpam():
 
 @bot.event
 async def on_ready():
-    bot.loop.create_task(time())
+    bot.loop.create_task(nowtime())
     bot.loop.create_task(antiSpam())
     
     print(f'bot {bot.user} online!')
