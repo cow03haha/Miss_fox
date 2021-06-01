@@ -171,7 +171,7 @@ async def nick(ctx, location = None, nick = None):
         except:
             continue
     
-    await msg.edit('success')
+    await msg.edit(content = 'success')
 
 @commands.has_guild_permissions(manage_messages = True)
 @bot.command()
