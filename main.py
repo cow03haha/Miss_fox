@@ -99,6 +99,18 @@ async def on_command_error(ctx, error):
         await ctx.send(f'未知錯誤\n```\n{error}\n```')
 
 @bot.command()
+async def ping(ctx):
+    """測試延遲。"""
+    t = time.perf_counter()
+    await ctx.trigger_typing()
+    t2 = time.perf_counter()
+    await ctx.trigger_typing()
+
+    bot = round((t2 - t) * 1000)
+    ws = int(bot.latency * 1000)
+    await ctx.send(f'延遲：{bot} 毫秒(ms)\nWebsocket：{ws} 毫秒(ms)')
+
+@bot.command()
 @commands.is_owner()
 async def send_to(ctx, ch: int, *, text):
     """Send message to specific channel"""
