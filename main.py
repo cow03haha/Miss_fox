@@ -20,7 +20,7 @@ class Slaper(commands.Converter):
         to_slap = random.choice(ctx.guild.members)
         return '{0.author.mention} slapped {1.mention} because *{2}*'.format(ctx, to_slap, arg)
 
-async def time():
+async def nowtime():
     await asyncio.sleep(60 - int(datetime.datetime.now().strftime('%S')))
     
     while not bot.is_closed():
