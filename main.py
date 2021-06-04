@@ -147,6 +147,23 @@ async def get_emojis(ctx):
     await ctx.send(file = discord.File(f'tmp/emojis.zip'))
     os.system(f'{rm} tmp')
 
+@bot.command()
+async def get_avatar(ctx, user: discord.User):
+    """Get specific member's avatar."""
+    await ctx.send(user.avatar_url)
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def voicemoveall(ctx, origin: discord.VoiceChannel, target: discord.VoiceChannel):
+    """Move all member from a to b."""
+    if ctx.author.guild_permissions.move_members:
+        if origin in ctx.guild.voice_channels and target in ctx.guild.voice_channels:
+            for members in origin.members:
+                await members.edit(voice_channel=target)
+                
+    res = f"把所有成員從 {origin.mention} 移動到 {target.mention} 成功"
+    await ctx.send(res)
+
 @commands.has_guild_permissions(manage_messages = True)
 @bot.command()
 async def clear_afterid(ctx, msg: discord.Message):
