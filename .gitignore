@@ -133,3 +133,6 @@ dmypy.json
 
 # config
 settings.json
+
+# replit keep_alive
+keep_alive.py
