@@ -62,8 +62,9 @@ async def on_message(msg: discord.Message):
     if msg.author.bot:
         return
 
-    if msg.content == f'{bot.user.mention} prefix':
-        await msg.channel.send(f'my prifx is `{bot.command_prefix}` !')
+    if bot.user.mentioned_in:
+        if msg.content.endswith('prefix'):
+            await msg.channel.send(f'my prifx is `{bot.command_prefix}` !')
 
     try:
         if spam[msg.author.id]:
