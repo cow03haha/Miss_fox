@@ -8,6 +8,7 @@ import asyncio
 import time
 import datetime
 import json
+import requests
 spam = {}
 
 with open('settings.json', 'r') as jfile:
@@ -102,7 +103,7 @@ async def on_command_error(ctx, error):
 
 @bot.command()
 async def ping(ctx):
-    """測試延遲。"""
+    """Check Latency."""
     t = time.perf_counter()
     await ctx.trigger_typing()
     t2 = time.perf_counter()
@@ -119,6 +120,18 @@ async def send_to(ctx, ch: int, *, text):
     ch = bot.get_channel(ch)
     
     await ch.send(text)
+
+@bot.command()
+async def earthquake(ctx):
+    """Get latest earthquake info."""
+    url = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/E-A0016-001'
+    parms = {
+        'Authorization': 'CWB-0569B6CC-CB83-4106-95A9-233988970211'
+    }
+    data = requests.get(url, params=parms)
+    resault = json.loads(data.text)
+    await ctx.send(f'{resault["records"]["earthquake"][0]["reportContent"]}\n資料來源:中央氣象局\n網址:{resault["records"]["earthquake"][0]["web"]}')
+    await ctx.send(resault["records"]["earthquake"][0]["reportImageURI"])
 
 @bot.command()
 async def slap(ctx, *, reason: Slaper):
@@ -179,12 +192,13 @@ async def clear_afterid(ctx, msg: discord.Message):
 @commands.is_owner()
 @bot.command()
 async def get_nick(ctx, member: discord.Member):
-    """get specific member's nick"""
+    """Get specific member's nick."""
     await ctx.send(member.nick)
 
 @bot.command()
 @commands.is_owner()
 async def nick(ctx, location = None, nick = None):
+    """Change member's nick."""
     msg = await ctx.send('progress...')
 
     if location == 'all':
@@ -207,6 +221,7 @@ async def nick(ctx, location = None, nick = None):
 @commands.has_guild_permissions(manage_messages = True)
 @bot.command()
 async def mute(ctx, member: discord.Member):
+    """Mute member."""
     spam[member.id] = {
             'time': 31536000,
             'count': 0,
@@ -223,6 +238,7 @@ async def mute(ctx, member: discord.Member):
 @commands.has_guild_permissions(manage_messages = True)
 @bot.command()
 async def unmute(ctx, member: discord.Member):
+    """Unmute member."""
     try:
         if not spam[member.id]['mute']:
             await ctx.send('這位成員沒有被靜音!')
