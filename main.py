@@ -122,16 +122,35 @@ async def send_to(ctx, ch: int, *, text):
     await ch.send(text)
 
 @bot.command()
+async def weather(ctx, locationName):
+    url = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-001'
+    parms = {
+        'Authorization': jdata['weather_auth'],
+        'locationName': locationName,
+        'elementName': 'PoP12h',
+    }
+    data = requests.get(url=url, params=parms)
+    resault = json.loads(data.text)
+
+    embed = discord.Embed(title='未來3天每12小時降雨機率', description=f'宜蘭縣 {locationName}', color=0x0080ff)
+    for i in resault['records']['locations'][0]['location'][0]['weatherElement'][0]['time']:
+        embed.add_field(name=i['startTime'], value=f'{i["elementValue"][0]["value"]}%', inline=True)
+    embed.set_footer(text="資料來源:中央氣象局")
+    await ctx.send(embed=embed)
+
+@bot.command()
 async def earthquake(ctx):
     """Get latest earthquake info."""
     url = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/E-A0016-001'
     parms = {
-        'Authorization': 'CWB-0569B6CC-CB83-4106-95A9-233988970211'
+        'Authorization': jdata['weather_auth']
     }
     data = requests.get(url, params=parms)
     resault = json.loads(data.text)
-    await ctx.send(f'{resault["records"]["earthquake"][0]["reportContent"]}\n資料來源:中央氣象局\n網址:{resault["records"]["earthquake"][0]["web"]}')
-    await ctx.send(resault["records"]["earthquake"][0]["reportImageURI"])
+
+    embed = discord.Embed()
+    embed.set_image(url=resault["records"]["earthquake"][0]["reportImageURI"])
+    await ctx.send(f'{resault["records"]["earthquake"][0]["reportContent"]}\n資料來源:中央氣象局\n網址:{resault["records"]["earthquake"][0]["web"]}', embed=embed)
 
 @bot.command()
 async def slap(ctx, *, reason: Slaper):
