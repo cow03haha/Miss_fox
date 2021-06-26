@@ -1,4 +1,5 @@
 {
     "token": "Your token",
-    "prefix": "//"
+    "prefix": "//",
+    "weather_auth": "weather auth"
 }
