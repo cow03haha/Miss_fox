@@ -141,15 +141,20 @@ async def weather(ctx, locationName):
 @bot.command()
 async def earthquake(ctx):
     """Get latest earthquake info."""
-    url = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/E-A0016-001'
+    url1 = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/E-A0015-001'
+    url2 = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/E-A0016-001'
     parms = {
         'Authorization': jdata['weather_auth']
     }
-    data = requests.get(url, params=parms)
-    resault = json.loads(data.text)
+    resault1 = json.loads(requests.get(url1, params=parms).text)
+    resault2 = json.loads(requests.get(url2, params=parms).text)
+    if resault1['records']['earthquake'][0]['earthquakeInfo']['originTime'] > resault2['records']['earthquake'][0]['earthquakeInfo']['originTime']:
+        resault = resault1
+    else:
+        resault = resault2
 
     embed = discord.Embed()
-    embed.set_image(url=resault["records"]["earthquake"][0]["reportImageURI"])
+    embed.set_image(url=resault['records']['earthquake'][0]['reportImageURI'])
     await ctx.send(f'{resault["records"]["earthquake"][0]["reportContent"]}\n資料來源:中央氣象局\n網址:{resault["records"]["earthquake"][0]["web"]}', embed=embed)
 
 @bot.command()
