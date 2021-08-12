@@ -23,22 +23,21 @@ class Fox(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.spam = {}
-        self.nowtime.start()
+        self.nowTime.start()
         self.antiSpam.start()
     
     def cog_unload(self):
         self.spam = {}
-        self.nowtime.cancel()
+        self.nowTime.cancel()
         self.antiSpam.cancel()
 
-    @tasks.loop(seconds=1, count=1)
-    async def nowtime(self):
-        while self.bot.is_ready():
+    @tasks.loop(seconds=1)
+    async def nowTime(self):
+        while self.bot.is_ready() and datetime.datetime.now().second == 0:
             now_time = datetime.datetime.now().strftime('%H:%M')
             time = discord.Activity(type = discord.ActivityType.watching, name = f'現在時間: {now_time}')
             
             await self.bot.change_presence(activity = time)
-            await asyncio.sleep(60)
 
     @tasks.loop(seconds=1, count=1)
     async def antiSpam(self):
