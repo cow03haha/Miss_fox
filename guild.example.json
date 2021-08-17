@@ -1,0 +1,12 @@
+{
+    "伺服器ID": {
+        "join": {
+            "id": "頻道ID(int)",
+            "message": "f'嗨 {member.mention}, 歡迎來到 **{member.guild.name}** ! :heart_eyes:'"
+        },
+        "leave": {
+            "id": "頻道ID(int)",
+            "message": "f'{member.mention} 離開了 **{member.guild.name}** ! :wave:'"
+        }
+    }
+}

@@ -133,6 +133,7 @@ dmypy.json
 
 # config
 settings.json
+guild.json
 
 # replit keep_alive
 keep_alive.py

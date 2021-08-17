@@ -4,7 +4,6 @@ import asyncio
 import datetime
 import time
 import json
-from discord.ext.commands.core import command
 import requests
 import sys
 import os
@@ -33,15 +32,15 @@ class Fox(commands.Cog):
 
     @tasks.loop(seconds=1)
     async def nowTime(self):
-        while self.bot.is_ready() and datetime.datetime.now().second == 0:
+        if self.bot.is_ready() and datetime.datetime.now().second == 0:
             now_time = datetime.datetime.now().strftime('%H:%M')
             time = discord.Activity(type = discord.ActivityType.watching, name = f'現在時間: {now_time}')
             
             await self.bot.change_presence(activity = time)
 
-    @tasks.loop(seconds=1, count=1)
+    @tasks.loop(seconds=1)
     async def antiSpam(self):
-        while self.bot.is_ready():
+        if self.bot.is_ready():
             remove = []
             for i in self.spam:
                 self.spam[i]['time'] -= 1
@@ -54,8 +53,30 @@ class Fox(commands.Cog):
 
             for i in remove:
                 del self.spam[i]
-            
-            await asyncio.sleep(1)
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        with open('guild.json', 'r', encoding='utf8') as jfile:
+            jdata = json.load(jfile)
+        
+        key = str(member.guild.id)
+        if key not in jdata: return
+        if not jdata[key]['join']: return
+        
+        ch = member.guild.get_channel(jdata[key]['join']['id'])
+        await ch.send(eval(jdata[key]['join']['message']))
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member):
+        with open('guild.json', 'r', encoding='utf8') as jfile:
+            jdata = json.load(jfile)
+        
+        key = str(member.guild.id)
+        if key not in jdata: return
+        if not jdata[key]['join']: return
+        
+        ch = member.guild.get_channel(jdata[key]['leave']['id'])
+        await ch.send(eval(jdata[key]['leave']['message']))
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -78,8 +99,7 @@ class Fox(commands.Cog):
                     role = discord.utils.get(msg.guild.roles, name = 'Muted')
                     await msg.author.add_roles(role, reason = '自動防洗頻系統')
 
-                    await msg.channel.purge(after = self.spam[msg.author.id]['msgTime'], bulk = True)
-
+                    await msg.channel.purge(after = self.spam[msg.author.id]['msgTime'], check = lambda n: n.author == msg.author, bulk = True)
                     await msg.channel.send(f'{msg.author.mention} 已被自動防洗頻系統靜音，如有誤判請通知管理員')
                     
         except KeyError:
