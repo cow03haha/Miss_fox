@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands, tasks
-import asyncio
 import datetime
 import time
 import json
@@ -44,7 +43,7 @@ class Fox(commands.Cog):
             remove = []
             for i in self.spam:
                 self.spam[i]['time'] -= 1
-                if  self.spam[i]['time'] <= 0:
+                if self.spam[i]['time'] <= 0:
                     remove.append(i)
                     
                     if self.spam[i]['mute']:
@@ -88,18 +87,22 @@ class Fox(commands.Cog):
                 await msg.channel.send(f'my prifx is `{self.bot.command_prefix}` !')
 
         try:
+            if not isinstance(msg.channel, discord.TextChannel): return
+
             if self.spam[msg.author.id]:
                 self.spam[msg.author.id]['count'] += 1
+                if msg.channel not in self.spam[msg.author.id]['chs']:
+                    self.spam[msg.author.id]['chs'].append(msg.channel)
 
-                if self.spam[msg.author.id]['count'] >= 20:
+                if self.spam[msg.author.id]['count'] >= 20 and not self.spam[msg.author.id]['mute']:
                     self.spam[msg.author.id]['time'] = 1800
-                    self.spam[msg.author.id]['count'] = 0
                     self.spam[msg.author.id]['mute'] = True
                     
                     role = discord.utils.get(msg.guild.roles, name = 'Muted')
                     await msg.author.add_roles(role, reason = '自動防洗頻系統')
 
-                    await msg.channel.purge(after = self.spam[msg.author.id]['msgTime'], check = lambda n: n.author == msg.author, bulk = True)
+                    for ch in self.spam[msg.author.id]['chs']:
+                        await ch.purge(after = self.spam[msg.author.id]['msgTime'], check = lambda n: n.author == msg.author, bulk = True)
                     await msg.channel.send(f'{msg.author.mention} 已被自動防洗頻系統靜音，如有誤判請通知管理員')
                     
         except KeyError:
@@ -109,6 +112,7 @@ class Fox(commands.Cog):
                 'mute': False,
                 'member': msg.author,
                 'msgTime': msg.created_at - datetime.timedelta(microseconds = 1),
+                'chs' : [msg.channel]
             }
 
     @commands.Cog.listener()
@@ -276,10 +280,8 @@ class Fox(commands.Cog):
         """Mute member."""
         self.spam[member.id] = {
                 'time': 31536000,
-                'count': 0,
                 'mute': True,
-                'member': member,
-                'msgTime': datetime.datetime.now() - datetime.timedelta(microseconds = 1),
+                'member': member
             }
         
         role = discord.utils.get(ctx.guild.roles, name = 'Muted')
@@ -299,9 +301,7 @@ class Fox(commands.Cog):
             await ctx.send('這位成員沒有被靜音!')
             return 0
             
-        self.spam[member.id]['time'] = 60
-        self.spam[member.id]['count'] = 0
-        self.spam[member.id]['mute'] = False
+        del self.spam[member.id]
         
         role = discord.utils.get(ctx.guild.roles, name = 'Muted')
         await member.remove_roles(role, reason = '自動防洗頻系統(手動)')
