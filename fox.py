@@ -43,10 +43,12 @@ class Fox(commands.Cog):
     @tasks.loop(seconds=1)
     async def nowTime(self):
         if self.bot.is_ready() and datetime.datetime.now().second == 0:
+            offset = time.timezone if not time.localtime().tm_isdst else time.altzone
+            offset = 8 - offset // 60 // 60 * -1
             now_time = datetime.datetime.now().strftime('%H:%M')
-            time = discord.Activity(type = discord.ActivityType.watching, name = f'現在時間: {now_time}')
             
-            await self.bot.change_presence(activity = time)
+            activity = discord.Activity(type = discord.ActivityType.watching, name = f'現在時間: {now_time}')
+            await self.bot.change_presence(activity = activity)
 
     @tasks.loop(seconds=1)
     async def antiSpam(self):
