@@ -44,9 +44,8 @@ class Fox(commands.Cog):
     async def nowTime(self):
         if self.bot.is_ready() and datetime.datetime.now().second == 0:
             offset = time.timezone if not time.localtime().tm_isdst else time.altzone
-            offset = offset // 60 // 60 * -1
-            offset = offset - 8 if offset > 8 else 8 - offset
-            now_time = (datetime.datetime.now() - datetime.timedelta(hours=offset)).strftime('%H:%M')
+            offset = 8 - offset // 60 // 60 * -1
+            now_time = (datetime.datetime.now() + datetime.timedelta(hours=offset)).strftime('%H:%M')
             
             activity = discord.Activity(type = discord.ActivityType.watching, name = f'現在時間: {now_time}')
             await self.bot.change_presence(activity = activity)
