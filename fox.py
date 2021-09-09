@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands, tasks
+from utils import *
 import datetime
 import time
 import json
@@ -21,6 +22,8 @@ class Fox(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.spam = {}
+        self.invites = {}
+        self.initial.start()
         self.nowTime.start()
         self.antiSpam.start()
     
@@ -28,6 +31,14 @@ class Fox(commands.Cog):
         self.spam = {}
         self.nowTime.cancel()
         self.antiSpam.cancel()
+
+    @tasks.loop(seconds=1)
+    async def initial(self):
+        if self.bot.is_ready():
+            for i in self.bot.guilds:
+                self.invites[i.id] = await i.invites()
+
+            self.initial.cancel()
 
     @tasks.loop(seconds=1)
     async def nowTime(self):
@@ -55,6 +66,10 @@ class Fox(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
+        # 可用變數: member, invite
+        new_invites = await member.guild.invites()
+        invite = find_use_invite(self.invites[member.guild.id], new_invites)
+        self.invites[member.guild.id] = new_invites
         with open('guild.json', 'r', encoding='utf8') as jfile:
             jdata = json.load(jfile)
         
@@ -67,6 +82,7 @@ class Fox(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        # 可用變數: member
         with open('guild.json', 'r', encoding='utf8') as jfile:
             jdata = json.load(jfile)
         
@@ -121,6 +137,14 @@ class Fox(commands.Cog):
             await ctx.send('找不到該訊息!')
         else:
             await ctx.send(f'未知錯誤\n```\n{error}\n```')
+    
+    @commands.Cog.listener()
+    async def on_invite_create(self, invite: discord.Invite):
+        self.invites[invite.guild.id].append(invite)
+    
+    @commands.Cog.listener()
+    async def on_invite_delete(self, invite: discord.Invite):
+        self.invites[invite.guild.id].remove(invite)
 
     @commands.command()
     async def ping(self, ctx):
