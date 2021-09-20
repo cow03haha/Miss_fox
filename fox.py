@@ -151,44 +151,43 @@ class Fox(commands.Cog):
         with open('guild.json', 'r') as jfile:
             jdata = json.load(jfile)
         
-        for key in jdata:
-            guild = jdata[key]
-            if not guild['config']['log']['voice_state']: return
+        cfg = jdata[str(member.guild.id)]
+        if not cfg['config']['log']['voice_state']: return
 
-            ch = member.guild.get_channel(guild['log']['voice_state'])
-            if before.channel == None and isinstance(after.channel, discord.VoiceChannel):
-                embed = discord.Embed(
-                    description = f'**{member.mention} 加入了語音頻道 {after.channel.mention}**',
-                    color = discord.Color.green(),
-                    timestamp = datetime.datetime.utcnow()
-                )
-                embed.set_author(
-                    name = f'{member.name}#{member.discriminator}',
-                    icon_url = member.avatar_url
-                )
-                await ch.send(embed = embed)
-            elif isinstance(before.channel, discord.VoiceChannel) and after.channel == None:
-                embed = discord.Embed(
-                    description = f'**{member.mention} 離開了語音頻道 {before.channel.mention}**',
-                    color = discord.Color.red(),
-                    timestamp = datetime.datetime.utcnow()
-                )
-                embed.set_author(
-                    name = f'{member.name}#{member.discriminator}',
-                    icon_url = member.avatar_url
-                )
-                await ch.send(embed = embed)
-            elif None not in [before.channel, after.channel] and before.channel != after.channel:
-                embed = discord.Embed(
-                    description = f'**{member.mention} 從 {before.channel.mention} 移動到 {after.channel.mention}**',
-                    color = discord.Color.blurple(),
-                    timestamp = datetime.datetime.utcnow()
-                )
-                embed.set_author(
-                    name = f'{member.name}#{member.discriminator}',
-                    icon_url = member.avatar_url
-                )
-                await ch.send(embed = embed)
+        ch = member.guild.get_channel(cfg['log']['voice_state'])
+        if before.channel == None and isinstance(after.channel, discord.VoiceChannel):
+            embed = discord.Embed(
+                description = f'**{member.mention} 加入了語音頻道 {after.channel.mention}**',
+                color = discord.Color.green(),
+                timestamp = datetime.datetime.utcnow()
+            )
+            embed.set_author(
+                name = f'{member.name}#{member.discriminator}',
+                icon_url = member.avatar_url
+            )
+            await ch.send(embed = embed)
+        elif isinstance(before.channel, discord.VoiceChannel) and after.channel == None:
+            embed = discord.Embed(
+                description = f'**{member.mention} 離開了語音頻道 {before.channel.mention}**',
+                color = discord.Color.red(),
+                timestamp = datetime.datetime.utcnow()
+            )
+            embed.set_author(
+                name = f'{member.name}#{member.discriminator}',
+                icon_url = member.avatar_url
+            )
+            await ch.send(embed = embed)
+        elif None not in [before.channel, after.channel] and before.channel != after.channel:
+            embed = discord.Embed(
+                description = f'**{member.mention} 從 {before.channel.mention} 移動到 {after.channel.mention}**',
+                color = discord.Color.blurple(),
+                timestamp = datetime.datetime.utcnow()
+            )
+            embed.set_author(
+                name = f'{member.name}#{member.discriminator}',
+                icon_url = member.avatar_url
+            )
+            await ch.send(embed = embed)
 
     @commands.command()
     async def ping(self, ctx):
