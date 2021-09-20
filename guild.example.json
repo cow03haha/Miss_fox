@@ -1,5 +1,14 @@
 {
     "伺服器ID": {
+        "config": {
+            "event": {
+                "join": false,
+                "leave": false
+            },
+            "log": {
+                "voice_state": false
+            }
+        },
         "join": {
             "id": "頻道ID(int)",
             "message": "f'嗨 {member.mention}, 歡迎來到 **{member.guild.name}** ! :heart_eyes:'"
@@ -7,6 +16,9 @@
         "leave": {
             "id": "頻道ID(int)",
             "message": "f'{member.mention} 離開了 **{member.guild.name}** ! :wave:'"
+        },
+        "log": {
+            "voice_state": "頻道ID(int)"
         }
     }
 }

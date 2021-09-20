@@ -76,8 +76,7 @@ class Fox(commands.Cog):
             jdata = json.load(jfile)
         
         key = str(member.guild.id)
-        if key not in jdata: return
-        if not jdata[key]['join']: return
+        if not jdata[key]['config']['event']['join']: return
         
         ch = member.guild.get_channel(jdata[key]['join']['id'])
         await ch.send(eval(jdata[key]['join']['message']))
@@ -89,8 +88,7 @@ class Fox(commands.Cog):
             jdata = json.load(jfile)
         
         key = str(member.guild.id)
-        if key not in jdata: return
-        if not jdata[key]['join']: return
+        if not jdata[key]['config']['event']['leave']: return
         
         ch = member.guild.get_channel(jdata[key]['leave']['id'])
         await ch.send(eval(jdata[key]['leave']['message']))
@@ -147,6 +145,50 @@ class Fox(commands.Cog):
     @commands.Cog.listener()
     async def on_invite_delete(self, invite: discord.Invite):
         self.invites[invite.guild.id].remove(invite)
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        with open('guild.json', 'r') as jfile:
+            jdata = json.load(jfile)
+        
+        for key in jdata:
+            guild = jdata[key]
+            if not guild['config']['log']['voice_state']: return
+
+            ch = member.guild.get_channel(guild['log']['voice_state'])
+            if before.channel == None and isinstance(after.channel, discord.VoiceChannel):
+                embed = discord.Embed(
+                    description = f'**{member.mention} 加入了語音頻道 {after.channel.mention}**',
+                    color = discord.Color.green(),
+                    timestamp = datetime.datetime.utcnow()
+                )
+                embed.set_author(
+                    name = f'{member.name}#{member.discriminator}',
+                    icon_url = member.avatar_url
+                )
+                await ch.send(embed = embed)
+            elif isinstance(before.channel, discord.VoiceChannel) and after.channel == None:
+                embed = discord.Embed(
+                    description = f'**{member.mention} 離開了語音頻道 {before.channel.mention}**',
+                    color = discord.Color.red(),
+                    timestamp = datetime.datetime.utcnow()
+                )
+                embed.set_author(
+                    name = f'{member.name}#{member.discriminator}',
+                    icon_url = member.avatar_url
+                )
+                await ch.send(embed = embed)
+            elif None not in [before.channel, after.channel] and before.channel != after.channel:
+                embed = discord.Embed(
+                    description = f'**{member.mention} 從 {before.channel.mention} 移動到 {after.channel.mention}**',
+                    color = discord.Color.blurple(),
+                    timestamp = datetime.datetime.utcnow()
+                )
+                embed.set_author(
+                    name = f'{member.name}#{member.discriminator}',
+                    icon_url = member.avatar_url
+                )
+                await ch.send(embed = embed)
 
     @commands.command()
     async def ping(self, ctx):
@@ -231,6 +273,29 @@ class Fox(commands.Cog):
         
         await ctx.send(file = discord.File(f'tmp/emojis.zip'))
         os.system(f'{rm} tmp')
+    
+    @commands.is_owner()
+    @commands.command()
+    async def custom_emoji(self, ctx, name, *roles):
+        await ctx.trigger_typing()
+
+        if not ctx.message.attachments:
+            await ctx.send('你沒有上傳任何檔案!')
+            return
+
+        if not roles:
+            await ctx.send('你沒有指定可用的身份組!')
+            return
+        
+        for count, file in enumerate(ctx.message.attachments):
+            await ctx.guild.create_custom_emoji(
+                name = name + count+1,
+                image = await file.read(),
+                roles = [i for i in ctx.guild.roles for j in roles if i.mention == j],
+                reason = 'custom_emoji'
+            )
+
+        await ctx.send(f'{len(ctx.message.attachments)}個表情符號增加成功!')
 
     @commands.command()
     async def get_avatar(self, ctx, user: discord.User):
