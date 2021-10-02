@@ -208,7 +208,7 @@ class Fox(commands.Cog):
             timestamp = datetime.datetime.utcnow()
         )
         embed.set_footer(text=f'User ID: {after.author.id}')
-        embed.add_field(name='編輯前', value=before.content, inline=False)
+        embed.add_field(name='編輯前', value=before.content if before.content else '(無)', inline=False)
         embed.add_field(name='編輯後', value=after.content, inline=False)
         embed.set_author(
             name = f'{after.author.name}#{after.author.discriminator}',
@@ -236,7 +236,8 @@ class Fox(commands.Cog):
             name = f'{msg.author.name}#{msg.author.discriminator}',
             icon_url = msg.author.avatar_url
         )
-        await ch.send(embed = embed)
+        notice = await ch.send(embed = embed)
+        await notice.reply("該訊息的附件", files = [await i.to_file() for i in msg.attachments])
 
     @commands.is_owner()
     @commands.command()
