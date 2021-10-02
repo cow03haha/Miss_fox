@@ -6,7 +6,8 @@
                 "leave": false
             },
             "log": {
-                "voice_state": false
+                "voice_state": false,
+                "message_update": false
             }
         },
         "join": {
@@ -18,7 +19,8 @@
             "message": "f'{member.mention} 離開了 **{member.guild.name}** ! :wave:'"
         },
         "log": {
-            "voice_state": "頻道ID(int)"
+            "voice_state": "頻道ID(int)",
+            "message_update": "頻道ID(int)"
         }
     }
 }

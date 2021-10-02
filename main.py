@@ -5,7 +5,7 @@ import json
 with open('settings.json', 'r') as jfile:
     jdata = json.load(jfile)
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix=jdata['prefix'], intents=intents)
+bot = commands.Bot(command_prefix=jdata['prefix'], intents=intents, max_messages=10000)
 
 
 @bot.event

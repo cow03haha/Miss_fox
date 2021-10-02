@@ -1,12 +1,14 @@
 import discord
+from discord import utils
 from discord.ext import commands, tasks
-from utils import *
+import utils
 import datetime
 import time
 import json
 import requests
 import sys
 import os
+from importlib import reload
 import zipfile
 import random
 
@@ -28,6 +30,7 @@ class Fox(commands.Cog):
         self.antiSpam.start()
     
     def cog_unload(self):
+        reload(utils)
         self.spam = {}
         self.nowTime.cancel()
         self.antiSpam.cancel()
@@ -70,12 +73,13 @@ class Fox(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         # 可用變數: member, invite
         new_invites = await member.guild.invites()
-        invite = find_use_invite(self.invites[member.guild.id], new_invites)
+        invite = utils.find_use_invite(self.invites[member.guild.id], new_invites)
         self.invites[member.guild.id] = new_invites
         with open('guild.json', 'r', encoding='utf8') as jfile:
             jdata = json.load(jfile)
         
         key = str(member.guild.id)
+        if not jdata.get(key): return
         if not jdata[key]['config']['event']['join']: return
         
         ch = member.guild.get_channel(jdata[key]['join']['id'])
@@ -88,6 +92,7 @@ class Fox(commands.Cog):
             jdata = json.load(jfile)
         
         key = str(member.guild.id)
+        if not jdata.get(key): return
         if not jdata[key]['config']['event']['leave']: return
         
         ch = member.guild.get_channel(jdata[key]['leave']['id'])
@@ -100,12 +105,10 @@ class Fox(commands.Cog):
 
         if self.bot.user.mentioned_in(msg):
             if msg.content.endswith('prefix'):
-                await msg.channel.send(f'my prifx is `{self.bot.command_prefix}` !')
+                await msg.channel.send(f'My preifx is `{self.bot.command_prefix}` !')
 
         try:
-            if not isinstance(msg.channel, discord.TextChannel): return
-
-            if self.spam[msg.author.id]:
+            if self.spam[msg.author.id] and isinstance(msg.channel, discord.TextChannel):
                 self.spam[msg.author.id]['count'] += 1
                 if msg.channel not in self.spam[msg.author.id]['chs']:
                     self.spam[msg.author.id]['chs'].append(msg.channel)
@@ -120,7 +123,6 @@ class Fox(commands.Cog):
                     for ch in self.spam[msg.author.id]['chs']:
                         await ch.purge(after = self.spam[msg.author.id]['msgTime'], check = lambda n: n.author == msg.author, bulk = True)
                     await msg.channel.send(f'{msg.author.mention} 已被自動防洗頻系統靜音，如有誤判請通知管理員')
-                    
         except KeyError:
             self.spam[msg.author.id] = {
                 'time': 60,
@@ -151,7 +153,8 @@ class Fox(commands.Cog):
         with open('guild.json', 'r') as jfile:
             jdata = json.load(jfile)
         
-        cfg = jdata[str(member.guild.id)]
+        cfg = jdata.get(str(member.guild.id))
+        if not cfg: return
         if not cfg['config']['log']['voice_state']: return
 
         ch = member.guild.get_channel(cfg['log']['voice_state'])
@@ -188,6 +191,57 @@ class Fox(commands.Cog):
                 icon_url = member.avatar_url
             )
             await ch.send(embed = embed)
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        with open('guild.json', 'r') as jfile:
+            jdata = json.load(jfile)
+
+        cfg = jdata.get(str(after.guild.id))
+        if not cfg: return
+        if not cfg['config']['log']['message_update']: return
+
+        ch = after.guild.get_channel(cfg['log']['message_update'])
+        embed = discord.Embed(
+            description = f'**一則在 {after.channel.mention} 的訊息被編輯了** [查看訊息]({after.jump_url})',
+            color = discord.Color.blurple(),
+            timestamp = datetime.datetime.utcnow()
+        )
+        embed.set_footer(text=f'User ID: {after.author.id}')
+        embed.add_field(name='編輯前', value=before.content, inline=False)
+        embed.add_field(name='編輯後', value=after.content, inline=False)
+        embed.set_author(
+            name = f'{after.author.name}#{after.author.discriminator}',
+            icon_url = after.author.avatar_url
+        )
+        await ch.send(embed = embed)
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, msg: discord.Message):
+        with open('guild.json', 'r') as jfile:
+            jdata = json.load(jfile)
+
+        cfg = jdata.get(str(msg.guild.id))
+        if not cfg: return
+        if not cfg['config']['log']['message_update']: return
+
+        ch = msg.guild.get_channel(cfg['log']['message_update'])
+        embed = discord.Embed(
+            description = f'**{msg.author.mention} 在 {msg.channel.mention} 發送的訊息被刪除了**\n{msg.content}',
+            color = discord.Color.red(),
+            timestamp = datetime.datetime.utcnow()
+        )
+        embed.set_footer(text=f'Author: {msg.author.id} | Message ID: {msg.id}')
+        embed.set_author(
+            name = f'{msg.author.name}#{msg.author.discriminator}',
+            icon_url = msg.author.avatar_url
+        )
+        await ch.send(embed = embed)
+
+    @commands.is_owner()
+    @commands.command()
+    async def test(self, ctx):
+        print(utils.abc())
 
     @commands.command()
     async def ping(self, ctx):
