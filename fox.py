@@ -201,6 +201,7 @@ class Fox(commands.Cog):
         if not cfg: return
         if not cfg['config']['log']['message_update']: return
 
+        if before.content == after.content: return
         ch = after.guild.get_channel(cfg['log']['message_update'])
         embed = discord.Embed(
             description = f'**一則在 {after.channel.mention} 的訊息被編輯了** [查看訊息]({after.jump_url})',
@@ -237,7 +238,8 @@ class Fox(commands.Cog):
             icon_url = msg.author.avatar_url
         )
         notice = await ch.send(embed = embed)
-        await notice.reply("該訊息的附件", files = [await i.to_file() for i in msg.attachments])
+        if msg.attachments:
+            await notice.reply("該訊息的附件", files = [await i.to_file() for i in msg.attachments])
 
     @commands.is_owner()
     @commands.command()
