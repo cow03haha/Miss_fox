@@ -1,3 +1,4 @@
+from typing import final
 import discord
 from discord import utils
 from discord.ext import commands, tasks
@@ -251,16 +252,26 @@ class Fox(commands.Cog):
     async def dm_all(self, ctx, *msg):
         """dm specificate message to all guild member(carefully use)"""
         humans = [i for i in ctx.guild.members if not i.bot and i != ctx.author]
+        unsend = {'disable_dm': [], 'unknown': []}
         count = 0
-
+        notice = await ctx.send('發送中...')
+        
         for member in humans:
+            now = count
             try:
                 await member.send(f'**{ctx.guild.name}** 公告\n作者: {ctx.author.mention}\n' + ' '.join(msg))
                 count += 1
             except discord.Forbidden:
-                pass
+                unsend['disable_dm'].append(member)
+            finally:
+                if now == count and member not in unsend['disable_dm']:
+                    unsend['unknown'].append(member)
         
-        await ctx.send(f'發送成功!\n實際發送人數/伺服器人數: {count}/{len(humans)}')
+        await notice.edit(content = 
+        '發送成功!\n'
+        f'實際發送人數/伺服器人數: {count}/{len(humans)}\n'
+        f'關閉伺服器私訊: {" ".join([i.mention for i in unsend["disable_dm"]])}\n'
+        f'其他原因: {" ".join([i.mention for i in unsend["unknown"]])}')
 
     @commands.command()
     async def ping(self, ctx):
