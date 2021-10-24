@@ -249,12 +249,13 @@ class Fox(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.command()
     async def dm_all(self, ctx, *msg):
+        """dm specificate message to all guild member(carefully use)"""
         humans = [i for i in ctx.guild.members if not i.bot and i != ctx.author]
         count = 0
 
         for member in humans:
             try:
-                await member.send(f'**{ctx.guild.name}** 公告\n' + ' '.join(msg))
+                await member.send(f'**{ctx.guild.name}** 公告\n作者: {ctx.author.mention}\n' + ' '.join(msg))
                 count += 1
             except discord.Forbidden:
                 pass
