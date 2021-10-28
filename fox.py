@@ -197,6 +197,7 @@ class Fox(commands.Cog):
         with open('guild.json', 'r') as jfile:
             jdata = json.load(jfile)
 
+        if not after.guild: return
         cfg = jdata.get(str(after.guild.id))
         if not cfg: return
         if not cfg['config']['log']['message_update']: return
@@ -222,6 +223,7 @@ class Fox(commands.Cog):
         with open('guild.json', 'r') as jfile:
             jdata = json.load(jfile)
 
+        if not msg.guild: return
         cfg = jdata.get(str(msg.guild.id))
         if not cfg: return
         if not cfg['config']['log']['message_update']: return
