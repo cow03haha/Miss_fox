@@ -1,4 +1,3 @@
-from typing import final
 import discord
 from discord import utils
 from discord.ext import commands, tasks
@@ -259,7 +258,7 @@ class Fox(commands.Cog):
         for member in humans:
             now = count
             try:
-                await member.send(f'**{ctx.guild.name}** 公告\n作者: {ctx.author.mention}\n' + ' '.join(msg))
+                await member.send(f'**{ctx.guild.name}** 公告\n作者: {ctx.author.name}#{ctx.author.discriminator}\n\n' + ' '.join(msg))
                 count += 1
             except discord.Forbidden:
                 unsend['disable_dm'].append(member)
