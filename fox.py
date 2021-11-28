@@ -247,6 +247,12 @@ class Fox(commands.Cog):
     @commands.command()
     async def test(self, ctx):
         print(utils.abc())
+    
+    @commands.has_permissions(administrator=True)
+    @commands.command()
+    async def roll(self, ctx, target: discord.Role, *reward):
+        """roll from specific role"""
+        await ctx.send(f'恭喜 {random.choice(target.members).mention} 抽中\n{" ".join(reward)} !')
 
     @commands.has_permissions(administrator=True)
     @commands.command()
